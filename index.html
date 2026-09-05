@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Frame AR New Tab Overlay</title>
+    <!-- Include A-Frame -->
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+        }
+
+        /* The AR UI Container Overlay */
+        #ar-ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none; /* Hidden by default outside AR */
+            pointer-events: none; /* Pass clicks through to canvas by default */
+        }
+
+        /* Automatically shown by A-Frame/WebXR when active using pseudo-class */
+        #ar-ui-overlay:xr-overlay {
+            display: block;
+        }
+
+        /* The Sliding "New Tab" Window */
+        .browser-tab {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70vh;
+            background: rgba(18, 18, 20, 0.85);
+            backdrop-filter: blur(25px);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto; /* Re-enable clicks inside the UI */
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+        }
+
+        .browser-tab.open {
+            transform: translateY(0);
+        }
+
+        .tab-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .address-bar {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #ccc;
+            margin: 0 12px;
+            text-align: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .tab-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .tab-content h2 { margin-top: 0; font-size: 20px; }
+        .tab-content p { color: #aaa; font-size: 14px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <!-- HTML UI Overlay Root Element passed to A-Frame -->
+    <div id="ar-ui-overlay">
+        <div class="browser-tab" id="browserTab">
+            <div class="tab-header">
+                <button class="close-btn" id="closeTab">&times;</button>
+                <div class="address-bar">ar://aframe.holographic/tab</div>
+            </div>
+            <div class="tab-content">
+                <h2>Holographic New Tab</h2>
+                <p>This HTML layout runs natively on top of your mobile camera stream using A-Frame's WebXR implementation.</p>
+                <button id="interactBtn" style="padding: 10px 16px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px;">Trigger Action</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- A-Frame Scene configured with WebXR DOM Overlay -->
+    <a-scene webxr="optionalFeatures: [dom-overlay]; overlayElement: #ar-ui-overlay;">
+        <a-assets>
+            <a-mixin id="cube" geometry="primitive: box; height: 0.2; width: 0.2; depth: 0.2" material="color: #007aff;"></a-mixin>
+        </a-assets>
+
+        <!-- Basic environment lighting and camera -->
+        <a-entity camera position="0 1.6 0"></a-entity>
+        <a-light type="ambient" color="#fff"></a-light>
+
+        <!-- Optional 3D Anchor Object floating in AR space -->
+        <a-entity position="0 1 -1" rotation="0 45 0" animation="property: rotation; to: 360 360 0; loop: true; dur: 10000">
+            <a-box width="0.25" height="0.25" depth="0.25" color="#4CC3D9"></a-box>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const sceneEl = document.querySelector('a-scene');
+        const browserTab = document.getElementById('browserTab');
+        const closeTab = document.getElementById('closeTab');
+        const interactBtn = document.getElementById('interactBtn');
+
+        // Trigger slide-up animation when AR session successfully initializes
+        sceneEl.addEventListener('enter-vr', () => {
+            if (sceneEl.is('ar-mode')) {
+                setTimeout(() => {
+                    browserTab.classList.add('open');
+                }, 400);
+            }
+        });
+
+        sceneEl.addEventListener('exit-vr', () => {
+            browserTab.classList.remove('open');
+        });
+
+        closeTab.addEventListener('click', () => {
+            browserTab.classList.remove('open');
+        });
+
+        interactBtn.addEventListener('click', () => {
+            alert('HTML Interaction successful inside A-Frame AR view!');
+        });
+    </script>
+</body>
+</html>
